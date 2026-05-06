@@ -180,6 +180,6 @@ void setup()
 void loop()
 {
     HAL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
-    comm_can_set_current(1, 10);
+    comm_can_set_current(1, 1000);
     HAL_Delay(100);
 }
