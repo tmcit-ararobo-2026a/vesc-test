@@ -1,12 +1,12 @@
 #include "app/app.hpp"
 
-#include "app/Setting_CAN.hpp"
+#include "app/SettingCAN.hpp"
 #include "cstdint"
 #include "fdcan.h"
 #include "stm32g4xx_hal_fdcan.h"
 
-Setting_CAN can;
-LED_Config led_conf;
+SettingCAN can;
+LEDConfig led_conf;
 /*
 void can_transmit_eid(uint32_t id, const uint8_t* data, uint8_t len)
 {
@@ -201,7 +201,7 @@ void setup()
 
 void loop()
 {
-    led_conf.shine           = write;
+    led_conf.shine           = WRITE;
     uint32_t can_id_all_comp = 43 | ((uint32_t)CAN_PACKET_SET_CURRENT << 8);
     can.send_data(can_id_all_comp, led_conf.code, 1);
 

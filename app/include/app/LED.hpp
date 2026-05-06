@@ -1,17 +1,14 @@
 #pragma once
 #include <cstdint>
 
-enum
-{
-    none,
-    write,
-    toggle,
-} Led;
+enum {
+    NONE,
+    WRITE,
+    TOGGLE,
+} LED;
 
-union LED_Config
-{
-    struct
-    {
+union LEDConfig {
+    struct {
         uint8_t shine;
     } __attribute__((__packed__));
     uint8_t code[1];
