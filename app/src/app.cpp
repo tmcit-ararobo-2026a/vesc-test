@@ -1,11 +1,13 @@
 #include "app/app.hpp"
 
+#include "app/Setting_CAN.hpp"
 #include "cstdint"
 #include "fdcan.h"
 #include "stm32g4xx_hal_fdcan.h"
 
-extern "C" {
-// send_function
+Setting_CAN can;
+LED_Config led_conf;
+/*
 void can_transmit_eid(uint32_t id, const uint8_t* data, uint8_t len)
 {
     FDCAN_TxHeaderTypeDef tx_header;
@@ -20,6 +22,7 @@ void can_transmit_eid(uint32_t id, const uint8_t* data, uint8_t len)
     tx_header.MessageMarker       = 0;
 
     while (HAL_FDCAN_GetTxFifoFreeLevel(&hfdcan3) == 0);
+
     if (HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan3, &tx_header, data) != HAL_OK) {
         // HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_SET);
         Error_Handler();
@@ -71,7 +74,10 @@ void comm_can_set_duty(uint8_t controller_id, float duty)
     int32_t send_index = 0;
     uint8_t buffer[4];
     buffer_append_int32(buffer, (int32_t)(duty * 100000.0), &send_index);
-    can_transmit_eid(controller_id | ((uint32_t)CAN_PACKET_SET_DUTY << 8), buffer, send_index);
+
+    uint32_t can_id_duty = controller_id | ((uint32_t)CAN_PACKET_SET_DUTY << 8);
+
+    can_transmit_eid(can_id_duty, buffer, send_index);
 }
 
 void comm_can_set_current(uint8_t controller_id, float current)
@@ -79,7 +85,9 @@ void comm_can_set_current(uint8_t controller_id, float current)
     int32_t send_index = 0;
     uint8_t buffer[4];
     buffer_append_int32(buffer, (int32_t)(current * 1000.0), &send_index);
-    can_transmit_eid(controller_id | ((uint32_t)CAN_PACKET_SET_CURRENT << 8), buffer, send_index);
+
+    uint32_t can_id_current = controller_id | ((uint32_t)CAN_PACKET_SET_CURRENT << 8);
+    can_transmit_eid(can_id_current, buffer, send_index);
 }
 
 void comm_can_set_current_off_delay(uint8_t controller_id, float current, float off_delay)
@@ -131,7 +139,7 @@ void comm_can_set_current_rel(uint8_t controller_id, float current_rel)
  * Same as above, but also sets the off delay. Note that this command uses 6 bytes now. The off
  * delay is useful to set to keep the current controller running for a while even after setting
  * currents below the minimum current.
- */
+
 void comm_can_set_current_rel_off_delay(uint8_t controller_id, float current_rel, float off_delay)
 {
     int32_t send_index = 0;
@@ -171,15 +179,39 @@ void comm_can_set_handbrake_rel(uint8_t controller_id, float current_rel)
     can_transmit_eid(
         controller_id | ((uint32_t)CAN_PACKET_SET_CURRENT_HANDBRAKE_REL << 8), buffer, send_index
     );
-}
-}
+}*/
+
+typedef enum {
+    CAN_PACKET_SET_DUTY = 0,
+    CAN_PACKET_SET_CURRENT,
+    CAN_PACKET_SET_CURRENT_BRAKE,
+    CAN_PACKET_SET_RPM,
+    CAN_PACKET_SET_POS,
+    CAN_PACKET_SET_CURRENT_REL = 10,
+    CAN_PACKET_SET_CURRENT_BRAKE_REL,
+    CAN_PACKET_SET_CURRENT_HANDBRAKE,
+    CAN_PACKET_SET_CURRENT_HANDBRAKE_REL,
+    CAN_PACKET_MAKE_ENUM_32_BITS = 0xFFFFFFFF,
+} CAN_PACKET_ID;
+
 void setup()
 {
-    HAL_FDCAN_Start(&hfdcan3);
+    can.init(&led_conf);
 }
+
 void loop()
 {
+    led_conf.shine           = write;
+    uint32_t can_id_all_comp = 43 | ((uint32_t)CAN_PACKET_SET_CURRENT << 8);
+    can.send_data(can_id_all_comp, led_conf.code, 1);
+
     HAL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
-    comm_can_set_current(1, 1000);
     HAL_Delay(100);
+}
+
+extern "C" {
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef* hfdcan, uint32_t RxFifo0ITs)
+{
+    can.can_callback(hfdcan, RxFifo0ITs);
+}
 }

@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Cortex Debug",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32g4x.cfg"
+            ],
+            "executable": "/home/kni/kni_ws/vesc-test/build/Debug/multi_MD_v2.elf",
+            "runToEntryPoint": "main",
+            "svdFile": "${workspaceFolder}/STM32G474xx.svd",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
